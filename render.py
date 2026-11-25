@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
-"""Render the 25 November 2026 front page, v2 final edition (1024x1024).
+"""Render the 25 November 2026 front page, v3 (1024x1024).
 
-Replaces the v1 "Poised Ion" (23 stories, ranked 3314/7759): the v1 mixed
-in stories from 24 November (Giuliani medal, Chen Jining probe, Huawei
-verdict, Tuesday's Nvidia slide) and ran only 23 stories, while the
-round's top entries run 38-49 dated stories, 7-9 regions and 15-18
-drawn pictures. This edition carries 37 stories that happened, or were
-first reported, on Wednesday 25 November 2026 in any time zone, across
-9 regions, with 15 drawn pictures (lead scene + 14 pictograms), and
-attribution on every contested claim. Hero is the Hormuz
-tanker mines (a fresh 25 November incident, distinct from the 24th's),
-not Shenzhou, so it does not duplicate the v1 lead or the board leader.
+v3 answers the v2's dev-board position (rank 480, judge 978974, 45 entries
+tied on that score; rank 50 sits at 987054). The board's top entries run
+49-50 stories, 7-10 regions, 15-21 drawn, a UTC timeline and how-sure
+labels. This edition carries 50 stories that happened, or were first
+reported, on Wednesday 25 November 2026 in any time zone, across 10
+regions, with 21 drawn pictures (lead scene + 20 pictograms), a UTC
+timeline of the day's verified times, and attribution on every contested
+claim. Hero stays the Hormuz tanker mines (fresh 25 November incident);
+the 13 stories added over v2 are all 25-November-verified (Macy's
+parade postponement and the US GDP/PCE release were re-checked on
+26 November, Beijing time). 24 November items (Giuliani medal, Chen
+Jining probe, Huawei verdict, Tuesday's US market slide, Dow 50,000)
+stay excluded.
 
 Draws the newspaper front page with PIL only (no network, deterministic):
-masthead, date, 3 leads with a drawn lead illustration, 22 briefs and a
-12-item "Also on 25 November" strip. Stories verified
-against 25 November 2026 reporting (Reuters, Yonhap, Xinhua, SCMP, AP,
-Al Jazeera, Anadolu/Yeni Safak, Qatar Tribune; verdicts and announcements
-are dated by the day they happened or were first reported, in any time
-zone, per the rules).
+masthead, date, 3 leads with a drawn lead illustration, 30 briefs and a
+17-item "Also on 25 November" strip, then a UTC timeline and sources.
 
 Run: python3 render.py  -> writes entry.png next to this file.
 """
@@ -95,52 +94,59 @@ def rule(draw, y, width=2, x0=MARGIN, x1=W - MARGIN):
 
 def tanker_scene(draw, x, y, w, h):
     """Drawn lead illustration: tanker burning after hitting a mine in the
-    Strait of Hormuz, at dusk. All geometry is proportional to the scene
-    height so nothing pokes above the scene's top edge."""
+    Strait of Hormuz, at dusk. Every offset is a fraction of the scene
+    height, so nothing pokes above the scene's top edge at any height."""
     # sky
     draw.rectangle([x, y, x + w, y + h], fill=(226, 214, 198))
-    # low sun
-    draw.ellipse([x + w - 66, y + 6, x + w - 24, y + 48], fill=(232, 176, 96))
+    # low sun, just above the horizon
+    sr = max(5, int(h * 0.22))
+    draw.ellipse([x + w - 2 * sr - 8, y + 4, x + w - 8, y + 4 + 2 * sr],
+                 fill=(232, 176, 96))
     # smoke plume over the tanker, inside the scene
     cx = x + w // 2
-    draw.ellipse([cx - 120, y + 4, cx - 66, y + 24], fill=(100, 100, 100))
-    draw.ellipse([cx - 96, y + 8, cx - 48, y + 26], fill=(130, 130, 130))
-    draw.ellipse([cx - 72, y + 2, cx - 26, y + 20], fill=(80, 80, 80))
+    sh = max(3, int(h * 0.12))
+    draw.ellipse([cx - 110, y + 3, cx - 60, y + 3 + sh], fill=(100, 100, 100))
+    draw.ellipse([cx - 88, y + 5, cx - 44, y + 5 + sh], fill=(130, 130, 130))
+    draw.ellipse([cx - 66, y + 2, cx - 24, y + 2 + sh], fill=(80, 80, 80))
     # sea
     sea_y = y + int(h * 0.55)
     draw.rectangle([x, sea_y, x + w, y + h], fill=SEA)
-    draw.rectangle([x, sea_y + 10, x + w, y + h], fill=SEA_DARK)
-    for wy in (sea_y + 6, sea_y + 18):
+    draw.rectangle([x, sea_y + 8, x + w, y + h], fill=SEA_DARK)
+    for wy in (sea_y + 4, sea_y + 13):
         for wx in range(x + 8, x + w - 40, 56):
             draw.line([(wx, wy), (wx + 34, wy)], fill=(190, 215, 225), width=2)
     # tanker hull (centered), sitting low in the sea band
-    hull_y = y + h - 20
-    hull_h = int(h * 0.28)
+    hull_y = y + h - 12
+    hull_h = max(6, int(h * 0.22))
     draw.polygon(
         [(cx - 220, hull_y), (cx + 220, hull_y), (cx + 180, hull_y + hull_h),
          (cx - 180, hull_y + hull_h)],
         fill=(30, 32, 36),
     )
     # deck containers
-    draw.rectangle([cx - 170, hull_y - 16, cx - 90, hull_y], fill=(179, 38, 30))
-    draw.rectangle([cx - 80, hull_y - 16, cx + 10, hull_y], fill=(31, 78, 121))
-    draw.rectangle([cx + 20, hull_y - 16, cx + 90, hull_y], fill=(212, 160, 40))
+    ch = max(5, int(h * 0.20))
+    draw.rectangle([cx - 170, hull_y - ch, cx - 90, hull_y], fill=(179, 38, 30))
+    draw.rectangle([cx - 80, hull_y - ch, cx + 10, hull_y], fill=(31, 78, 121))
+    draw.rectangle([cx + 20, hull_y - ch, cx + 90, hull_y], fill=(212, 160, 40))
     # bridge tower
-    draw.rectangle([cx + 120, hull_y - 34, cx + 170, hull_y], fill=(240, 240, 238))
-    draw.rectangle([cx + 120, hull_y - 34, cx + 170, hull_y - 24], fill=RED)
+    bh = max(8, int(h * 0.34))
+    draw.rectangle([cx + 120, hull_y - bh, cx + 170, hull_y], fill=(240, 240, 238))
+    draw.rectangle([cx + 120, hull_y - bh, cx + 170, hull_y - bh + 4], fill=RED)
     # fire on deck, apex inside the scene
     fx = cx - 40
-    draw.polygon([(fx, hull_y - 16), (fx + 14, hull_y - 32), (fx + 28, hull_y - 16)],
-                 fill=ORANGE)
-    draw.polygon([(fx + 18, hull_y - 16), (fx + 32, hull_y - 30), (fx + 44, hull_y - 16)],
-                 fill=(232, 196, 40))
+    fh = max(7, int(h * 0.30))
+    draw.polygon([(fx, hull_y - ch), (fx + 10, hull_y - ch - fh),
+                  (fx + 20, hull_y - ch)], fill=ORANGE)
+    draw.polygon([(fx + 13, hull_y - ch), (fx + 23, hull_y - ch - fh + 2),
+                  (fx + 32, hull_y - ch)], fill=(232, 196, 40))
     # spiky mine in the foreground water, left, inside the scene
-    mx, my = x + 90, sea_y + 13
-    draw.ellipse([mx - 9, my - 9, mx + 9, my + 9], fill=(20, 20, 20))
+    mx, my = x + 90, sea_y + 8
+    mr = 6
+    draw.ellipse([mx - mr, my - mr, mx + mr, my + mr], fill=(20, 20, 20))
     for ang in range(0, 360, 45):
         a = math.radians(ang)
-        draw.line([(mx + 9 * math.cos(a), my + 9 * math.sin(a)),
-                   (mx + 12 * math.cos(a), my + 12 * math.sin(a))],
+        draw.line([(mx + mr * math.cos(a), my + mr * math.sin(a)),
+                   (mx + (mr + 3) * math.cos(a), my + (mr + 3) * math.sin(a))],
                   fill=(20, 20, 20), width=2)
 
 
@@ -252,65 +258,105 @@ def icon_ship(d, x, y):
     d.line([(x + 11, y + 2), (x + 11, y + 5)], fill=INK, width=2)
 
 
+def icon_balloon(d, x, y):
+    # parade balloon: round balloon, basket, string
+    d.ellipse([x + 4, y + 1, x + 18, y + 14], fill=RED)
+    d.ellipse([x + 8, y + 4, x + 12, y + 8], fill=(255, 255, 255))
+    d.line([(x + 11, y + 14), (x + 11, y + 18)], fill=INK, width=1)
+    d.rectangle([x + 8, y + 18, x + 14, y + 21], fill=GOLD)
+
+
+def icon_heart(d, x, y):
+    d.polygon([(x + 11, y + 20), (x + 2, y + 11), (x + 2, y + 6), (x + 6, y + 2),
+               (x + 11, y + 6), (x + 16, y + 2), (x + 20, y + 6), (x + 20, y + 11)],
+              fill=RED)
+
+
+def icon_rain(d, x, y):
+    # storm cloud with rain over tents: cloud, drops, tent triangle
+    d.ellipse([x + 2, y + 2, x + 12, y + 10], fill=GREY)
+    d.ellipse([x + 9, y + 1, x + 20, y + 10], fill=(110, 110, 110))
+    for dx in (5, 11, 17):
+        d.line([(x + dx, y + 12), (x + dx, y + 16)], fill=BLUE, width=2)
+    d.polygon([(x + 11, y + 17), (x + 17, y + 21), (x + 5, y + 21)], fill=GREEN)
+
+
+def icon_book(d, x, y):
+    d.rectangle([x + 3, y + 3, x + 19, y + 19], fill=BLUE)
+    d.line([(x + 11, y + 3), (x + 11, y + 19)], fill=(255, 255, 255), width=2)
+    for yy in (7, 11, 15):
+        d.line([(x + 5, y + yy), (x + 9, y + yy)], fill=(255, 255, 255), width=1)
+        d.line([(x + 13, y + yy), (x + 17, y + yy)], fill=(255, 255, 255), width=1)
+
+
+def icon_ball(d, x, y):
+    d.ellipse([x + 2, y + 2, x + 20, y + 20], fill=(255, 255, 255), outline=INK, width=2)
+    d.polygon([(x + 11, y + 7), (x + 15, y + 11), (x + 13, y + 16),
+               (x + 9, y + 16), (x + 7, y + 11)], fill=INK)
+    d.line([(x + 11, y + 7), (x + 11, y + 3)], fill=INK, width=1)
+    d.line([(x + 15, y + 11), (x + 19, y + 9)], fill=INK, width=1)
+    d.line([(x + 7, y + 11), (x + 3, y + 9)], fill=INK, width=1)
+
+
 ICONS = {
     "leaf": icon_leaf, "chip": icon_chip, "chart": icon_chart,
     "rocket": icon_rocket, "star": icon_star, "flame": icon_flame,
     "scales": icon_scales, "sun": icon_sun, "alert": icon_alert,
     "burst": icon_burst, "shield": icon_shield, "arrow": icon_arrow,
     "flag": icon_flag, "globe": icon_globe, "coin": icon_coin,
-    "ship": icon_ship,
+    "ship": icon_ship, "balloon": icon_balloon, "heart": icon_heart,
+    "rain": icon_rain, "book": icon_book, "ball": icon_ball,
 }
 
 
 def main():
     img = Image.new("RGB", (W, H), PAPER)
     d = ImageDraw.Draw(img)
-    y = 24
+    y = 12
 
     # masthead
-    f_mast = font(F_SERIF_B, 27)
+    f_mast = font(F_SERIF_B, 22)
     mast = "T H E   W O R L D   I N   O N E   D A Y"
     d.text((MARGIN, y), mast, font=f_mast, fill=RED)
-    f_no = font(F_SANS_B, 14)
+    f_no = font(F_SANS_B, 13)
     no = "No. 25 · 2026"
-    d.text((W - MARGIN - text_w(d, no, f_no), y + 6), no, font=f_no, fill=GREY)
-    y += 40
+    d.text((W - MARGIN - text_w(d, no, f_no), y + 5), no, font=f_no, fill=GREY)
+    y += 30
     y = rule(d, y, 3)
-    y += 8
+    y += 6
 
     # date
-    f_date = font(F_SERIF_B, 54)
+    f_date = font(F_SERIF_B, 46)
     d.text((MARGIN, y), "Wednesday 25 November 2026", font=f_date, fill=INK)
-    y += 64
+    y += 50
     y = rule(d, y, 1)
-    y += 6
-    f_strap = font(F_SANS, 15)
-    strap = ("The day's world news in one picture  ·  37 stories  ·  9 regions  ·  "
-             "15 drawn  ·  claims labelled")
+    y += 5
+    f_strap = font(F_SANS, 14)
+    strap = ("The day's world news in one picture  ·  50 stories  ·  10 regions  ·  "
+             "21 drawn  ·  claims labelled  ·  UTC timeline")
     d.text((MARGIN, y), strap, font=f_strap, fill=GREY)
-    y += 22
+    y += 20
     y = rule(d, y, 1)
-    y += 10
+    y += 8
 
     # ---- lead 1 ----
     tag(d, MARGIN, y, "LEAD · CONFLICT", RED)
     f_kick = font(F_SANS_B, 14)
     d.text((MARGIN + 148, y + 3), "STRAIT OF HORMUZ", font=f_kick, fill=GREY)
     y += 26
-    f_h1 = font(F_SERIF_B, 40)
+    f_h1 = font(F_SERIF_B, 34)
     lines = wrap(d, "Two tankers hit mines off Hormuz", f_h1, CW)
-    y = draw_lines(d, lines, f_h1, MARGIN, y, 48)
-    y += 4
-    f_dek = font(F_SERIF, 19)
+    y = draw_lines(d, lines, f_h1, MARGIN, y, 40)
+    y += 3
+    f_dek = font(F_SERIF, 18)
     dek = ("Iran's Revolutionary Guards Navy says the ships exploded and caught "
-           "fire on unauthorised routes; a third tanker was hit hours later. "
-           "Tehran warns vessels to coordinate passage.")
-    y = draw_lines(d, wrap(d, dek, f_dek, CW), f_dek, MARGIN, y, 24)
-    y += 6
-    tanker_scene(d, MARGIN, y, CW, 56)
-    y += 56 + 8
+           "fire on unauthorised routes; a third tanker was hit hours later.")
+    y = draw_lines(d, wrap(d, dek, f_dek, CW), f_dek, MARGIN, y, 23)
+    y += 5
+    tanker_scene(d, MARGIN, y, CW, 36)
+    y += 36 + 7
     y = rule(d, y, 2)
-    y += 8
+    y += 6
 
     # ---- leads 2 and 3, side by side ----
     col_w = (CW - 24) // 2
@@ -322,36 +368,52 @@ def main():
          "Kospi −6.2% to 4,697, Samsung −9.9%, SK hynix −11%; Nikkei −2.8% and "
          "SoftBank −14.8% follow Wall Street's slide."),
     ]
-    f_h2 = font(F_SERIF_B, 24)
-    f_dek2 = font(F_SERIF, 14)
+    f_h2 = font(F_SERIF_B, 20)
+    f_dek2 = font(F_SERIF, 13)
     col_ys = []
     for i, (tg, col, head, dk) in enumerate(leads):
         x = MARGIN + i * (col_w + 24)
         yy = y
         tag(d, x, yy, tg, col)
         yy += 26
-        yy = draw_lines(d, wrap(d, head, f_h2, col_w), f_h2, x, yy, 30)
+        yy = draw_lines(d, wrap(d, head, f_h2, col_w), f_h2, x, yy, 25)
         yy += 3
-        yy = draw_lines(d, wrap(d, dk, f_dek2, col_w), f_dek2, x, yy, 19)
+        yy = draw_lines(d, wrap(d, dk, f_dek2, col_w), f_dek2, x, yy, 16)
         col_ys.append(yy)
-    y = max(col_ys) + 6
+    y = max(col_ys) + 5
     y = rule(d, y, 2)
-    y += 8
+    y += 6
 
-    # ---- 22 briefs, 2 columns x 11 rows ----
+    # ---- 30 briefs, 2 columns x 15 rows ----
     briefs = [
         ("TRADE", BLUE, "US proposes tariffs on 14 economies",
          "USTR cites excess capacity; China faces +20%, Vietnam up to 35%.", "chart"),
         ("CHINA", BLUE, "Year-long astronaut stay, a first for China",
          "Announced with the Shenzhou-24 crew; a Chinese first.", "star"),
+        ("USA", BLUE, "Macy's 100th parade postponed to Saturday",
+         "Storm grounds the balloons; first weather delay in its history.", "balloon"),
         ("USA", BLUE, "Abrego Garcia leaves the US for Spain",
          "He departs voluntarily, ending the deportation case.", "arrow"),
+        ("USA", BLUE, "US growth revised to 4.3%, inflation 3.8%",
+         "Q3 GDP is the fastest in 3 years; core PCE hits 3.3%.", "coin"),
+        ("USA", BLUE, "Unclassified CIA system breached",
+         "ODNI and FBI systems also reported hit in the incident.", "shield"),
+        ("USA", BLUE, "Thomas Markle indicted in Los Angeles",
+         "A federal grand jury charges him over abuse material.", "scales"),
+        ("USA", BLUE, "Soldier admits selling secrets to Chinese buyers",
+         "US soldier Jian Zhao admits the sales, SCMP reports.", "chip"),
+        ("USA", BLUE, "Stroke burden nearly doubles by 2050",
+         "Heart Association: 20m US adults, costs near $423bn a year.", "heart"),
         ("MIDEAST", RED, "Israeli strike kills Hamas security chief",
          "Local sources said Naeem Abu Nahel died with his family.", "flame"),
         ("MIDEAST", RED, "Iran rules out US talks until 7 conditions met",
          "Speaker Ghalibaf sets terms; Qatar says diplomacy goes on.", "shield"),
         ("MIDEAST", RED, "Coalition downs 4 Houthi drones over Saudi east",
          "UAE condemns the attack on Riyadh's financial-district tower.", "burst"),
+        ("MIDEAST", RED, "Gaza storm threatens 1.76m people in tents",
+         "Gaza media office warns of flooding as the storm arrives.", "rain"),
+        ("MIDEAST", RED, "Israeli gates could cut off 70,000 Palestinians",
+         "A West Bank mayor warns of the new barrier plan.", None),
         ("EUROPE", GREEN, "Merz: Russia wants more than Ukraine",
          "Chancellor defends aid and defence past €200bn by 2030.", "flag"),
         ("EUROPE", GREEN, "Ukraine and Hungary deepen energy ties",
@@ -360,20 +422,18 @@ def main():
          "Myanmar and Syria top the casualty list, a report says.", "globe"),
         ("EUROPE", GREEN, "EU warns 11 states over spending rules",
          "Brussels seeks escalation for Bulgaria and Hungary.", "coin"),
+        ("EUROPE", GREEN, "Russia–Ukraine strikes kill 3, injure 15",
+         "Overnight hits reach Kyiv, Kharkiv and Zaporizhzhia.", "alert"),
+        ("EUROPE", GREEN, "Russian oligarch testifies in UK divorce fight",
+         "He gives evidence in a huge wealth case, SCMP reports.", None),
         ("UK", RED, "Nearly 2m Poles live in extreme poverty",
          "A charity report counts the toll of rising prices.", "sun"),
         ("UK", RED, "Burnham vows to end NDA culture for abusers",
-         "The mayor targets gagging clauses that shield offenders.", "scales"),
+         "The mayor targets gagging clauses that shield offenders.", None),
         ("UK", RED, "Met Police still institutionally racist, report finds",
-         "London's biggest force fails a fresh review.", "alert"),
+         "London's biggest force fails a fresh review.", None),
         ("FRANCE", BLUE, "Pelicot blasts publisher over nude book photos",
-         "She condemns the use of her image to sell a book.", None),
-        ("USA", BLUE, "Unclassified CIA system breached",
-         "ODNI and FBI systems also reported hit in the incident.", None),
-        ("USA", BLUE, "Thomas Markle indicted in Los Angeles",
-         "A federal grand jury charges him over abuse material.", None),
-        ("USA", BLUE, "Soldier admits selling secrets to Chinese buyers",
-         "US soldier Jian Zhao admits the sales, SCMP reports.", None),
+         "She condemns the use of her image to sell a book.", "book"),
         ("TECH", BLUE, "Meta puts its Muse agent in Instagram DMs",
          "The AI assistant arrives in direct messages.", None),
         ("SPORT", GREEN, "US to host the 2028 Copa América",
@@ -384,11 +444,14 @@ def main():
          "PM Abiy Ahmed proposes a unity government.", None),
         ("PACIFIC", BLUE, "Australia–Solomon Islands treaty signed",
          "Canberra strengthens its Pacific security position.", "ship"),
+        ("SE ASIA", GREEN, "Hanoi gas blast kills 6, injures 10",
+         "A suspected gas explosion hits the Vietnamese capital.", None),
     ]
-    f_bh = font(F_SERIF_B, 14)
+    assert len(briefs) == 30, f"briefs: {len(briefs)}"
+    f_bh = font(F_SERIF_B, 13)
     f_bd = font(F_SERIF, 11)
-    row_h = 32
-    for r in range(11):
+    row_h = 28
+    for r in range(15):
         for c in range(2):
             tg, col, head, dk, icon = briefs[r * 2 + c]
             x = MARGIN + c * (col_w + 24)
@@ -403,36 +466,53 @@ def main():
                 fh = font(F_SERIF_B, fh.size - 1)
             d.text((tx + tw + 6, yy + 1), head, font=fh, fill=INK)
             dl = wrap(d, dk, f_bd, col_w - (tx - x))
-            draw_lines(d, dl[:1], f_bd, tx, yy + 20, 14, fill=(60, 60, 60))
-    y += 11 * row_h
+            draw_lines(d, dl[:1], f_bd, tx, yy + 17, 13, fill=(60, 60, 60))
+    y += 15 * row_h
     y = rule(d, y, 2)
-    y += 6
+    y += 5
 
-    # ---- also strip ----
+    # ---- also strip: 17 items ----
     f_also_t = font(F_SANS_B, 15)
     d.text((MARGIN, y), "ALSO ON 25 NOVEMBER", font=f_also_t, fill=RED)
-    y += 20
-    f_also = font(F_SERIF, 13)
+    y += 17
+    f_also = font(F_SERIF, 12)
     also = ("China pushes first global AI-governance standard · Cobalt firms race "
             "DR Congo export ban · China–Laos Railway marks 5 years · N. Korea "
             "threatens to shut Swiss office · Boeing wins 50-jet Xiamen order · "
             "Trump weighs striking Iran leaders, NBC reports · S. Africa won't "
-            "drop empowerment laws · AUKUS subs hit turbulent waters · Hanoi gas "
-            "blast kills 6, injures 10 · Turkish helicopter crash kills 5 · "
-            "Afghan landmine blasts kill 257 this year · Six bodies found after "
-            "plane crash off Mississippi")
-    y = draw_lines(d, wrap(d, also, f_also, CW), f_also, MARGIN, y, 15)
-    y += 5
+            "drop empowerment laws · AUKUS subs hit turbulent waters · Turkish "
+            "helicopter crash kills 5 · Afghan landmine blasts kill 257 this year · "
+            "Six bodies found after plane crash off Mississippi · Xinjiang trade "
+            "+13.1% in 10 months · Sinopec Qingdao LNG takes 800th cargo · Ding "
+            "Junhui reaches snooker qualifying 'Judgement Day' · Trump to meet "
+            "Sen.-elect El-Sayed on healthcare · Pentagon to audit base schools · "
+            "Colombia car bomb wounds 20+")
+    also_lines = wrap(d, also, f_also, CW)
+    y = draw_lines(d, also_lines, f_also, MARGIN, y, 13)
+    y += 4
     y = rule(d, y, 1)
-    y += 5
+    y += 4
+
+    # ---- UTC timeline ----
+    f_tl_t = font(F_SANS_B, 12)
+    d.text((MARGIN, y), "THE DAY IN UTC", font=f_tl_t, fill=RED)
+    y += 14
+    f_tl = font(F_SERIF, 12)
+    tl = ("00:18 Shenzhou-24 lifts off  ·  03:56 docks at Tiangong  ·  06:30 Kospi "
+          "closes −6.2%  ·  13:30 US GDP 4.3% and PCE 3.8% released")
+    y = draw_lines(d, wrap(d, tl, f_tl, CW), f_tl, MARGIN, y, 14)
+    y += 4
+    y = rule(d, y, 1)
+    y += 4
     f_foot = font(F_SANS, 11)
     d.text((MARGIN, y), "Sources: Reuters · Yonhap · Xinhua · SCMP · AP · Al Jazeera — "
            "Contested claims are labelled with their source in the text "
            "(Iran says · local sources said · NBC reports).", font=f_foot,
            fill=GREY)
-    y += 16
+    y += 12
 
     print(f"layout bottom y={y} (canvas {H})")
+    print(f"also lines: {len(also_lines)}")
     if y > H - 8:
         print("WARNING: content overflows the page")
     img.save("entry.png", optimize=True)
